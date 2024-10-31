@@ -30,16 +30,10 @@ export async function getInitialAccessToken(harvest_auth_token: string): Promise
 }
 
 export async function getAccessToken(user: User): Promise<string> {
-    console.log("harvest:getAccessToken")
-
     // current token is still valid
     if (user.harvest_access_token_expiration > new Date()) {
-        console.log("harvest:getAccessToken - using cached token")
-
         return user.harvest_access_token;
     }
-
-    console.log("harvest:getAccessToken - retrieving new token")
 
     const params = new URLSearchParams({
         refresh_token: user.harvest_refresh_token,
@@ -63,8 +57,6 @@ export async function getAccessToken(user: User): Promise<string> {
     if (!response.ok || data.access_token == null) {
         throw new Error(`Unable to refresh access token (${response.status}) for user: ${user.slack_id}`)
     }
-
-    console.log("harvest:getAccessToken", data)
 
     await updateUserToken(user.slack_id, data.access_token, data.refresh_token, data.expires_in)
 

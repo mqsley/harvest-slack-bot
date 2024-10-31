@@ -21,14 +21,14 @@ function getReminderMessage(user: User, timeEntries: TimeEntry[]) {
 }
 
 (async () => {
-    console.log('🗓️ Remind is Running!');
+    console.log(`📅 Remind is Running!`);
 
     const users = await getUsersWithRemindersEnabled()
 
     for (const user of users) {
         const timeEntries = await getCurrentTimeEntries(user);
 
-        console.log(`✉️ Sending message to ${user.slack_id}`);
+        console.log(`\t✉️ Sending message to ${user.slack_id}`);
 
         const message = getReminderMessage(user, timeEntries);
 
@@ -38,8 +38,8 @@ function getReminderMessage(user: User, timeEntries: TimeEntry[]) {
             blocks: getReminderMessageBlock(message, timeEntries.length >= 5)
         });
 
-        console.log(`📫 Sent message to ${user.slack_id}`);
+        console.log(`\t📫 Sent message to ${user.slack_id}\n`);
     }
 
-    console.log('✅ Remind complete!');
+    console.log(`✅  Remind Complete`);
 })();
