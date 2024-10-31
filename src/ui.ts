@@ -1,6 +1,8 @@
+import type { Block, KnownBlock } from "@slack/types";
 import { User } from './types';
+import { getMondayAndFriday } from "./util";
 
-export async function getAuthenticationHomeViewBlocks(slack_id: string) {
+export function getAuthenticationHomeViewBlocks(slack_id: string): (KnownBlock | Block)[] {
     return [
         {
             "type": "header",
@@ -33,7 +35,7 @@ export async function getAuthenticationHomeViewBlocks(slack_id: string) {
     ]
 }
 
-export async function getHomeViewBlocks(user: User) {
+export function getHomeViewBlocks(user: User): (KnownBlock | Block)[] {
     return [
         {
             "type": "header",
@@ -72,3 +74,58 @@ export async function getHomeViewBlocks(user: User) {
         }
     ]
 }
+
+export function getReminderMessageBlock(message: string, isComplete: boolean) {
+    function formatDate(date: Date): string {
+        return date.toLocaleDateString("en-US", { month: "long", day: "numeric" });
+    }
+
+    const { monday, friday } = getMondayAndFriday();
+
+    const blocks: (KnownBlock | Block)[] = [
+        {
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": message
+            }
+        },
+        {
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": `*This week*, ${formatDate(monday)} to ${formatDate(friday)}`
+            }
+        },
+        {
+            "type": "divider"
+        },
+        {
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": `*<https://infiniteranges.harvestapp.com/time|Timesheet>*\nStatus: ${isComplete ? ":white_check_mark: Submitted" : ":no_entry: Not Submitted" }`
+            }
+        }]
+
+    if (!isComplete) {
+        blocks.push({
+            "type": "actions",
+            "elements": [
+                {
+                    "type": "button",
+                    "text": {
+                        "type": "plain_text",
+                        "text": "Complete now",
+                        "emoji": true
+                    },
+                    "style": "primary",
+                    "url": "https://infiniteranges.harvestapp.com/time"
+                }
+            ]
+        })
+    }
+
+    return blocks;
+}
+

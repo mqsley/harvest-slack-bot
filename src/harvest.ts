@@ -1,5 +1,6 @@
 import { updateUserToken } from "./db";
 import { HarvestAccessToken, TimeEntry, User } from "./types";
+import { getMondayAndFriday } from "./util";
 
 export async function getInitialAccessToken(harvest_auth_token: string): Promise<HarvestAccessToken> {
     const params = new URLSearchParams({
@@ -29,10 +30,16 @@ export async function getInitialAccessToken(harvest_auth_token: string): Promise
 }
 
 export async function getAccessToken(user: User): Promise<string> {
+    console.log("harvest:getAccessToken")
+
     // current token is still valid
     if (user.harvest_access_token_expiration > new Date()) {
+        console.log("harvest:getAccessToken - using cached token")
+
         return user.harvest_access_token;
     }
+
+    console.log("harvest:getAccessToken - retrieving new token")
 
     const params = new URLSearchParams({
         refresh_token: user.harvest_refresh_token,
@@ -57,36 +64,21 @@ export async function getAccessToken(user: User): Promise<string> {
         throw new Error(`Unable to refresh access token (${response.status}) for user: ${user.slack_id}`)
     }
 
+    console.log("harvest:getAccessToken", data)
+
     await updateUserToken(user.slack_id, data.access_token, data.refresh_token, data.expires_in)
 
-    return data
-}
-
-function getMondayAndFriday(): { monday: Date; friday: Date } {
-    const today = new Date();
-
-    const dayOfWeek = today.getDay();
-    const daysToMonday = (1 - dayOfWeek + 7) % 7; // Days to next Monday
-    const daysToFriday = (5 - dayOfWeek + 7) % 7; // Days to next Friday
-
-    // Calculate Monday and Friday dates
-    const monday = new Date(today);
-    monday.setDate(today.getDate() + daysToMonday);
-
-    const friday = new Date(today);
-    friday.setDate(today.getDate() + daysToFriday);
-
-    return { monday, friday };
-}
-
-function formatDate(date: Date): string {
-    return date.toISOString().split('T')[0];
+    return data.access_token;
 }
 
 export async function getCurrentTimeEntries(user: User): Promise<TimeEntry[]> {
     const accessToken = await getAccessToken(user);
 
     const { monday, friday } = getMondayAndFriday();
+
+    function formatDate(date: Date): string {
+        return date.toISOString().split('T')[0];
+    }
 
     const response = await fetch(`https://api.harvestapp.com/v2/time_entries?from=${formatDate(monday)}&to=${formatDate(friday)}`, {
         headers: {
