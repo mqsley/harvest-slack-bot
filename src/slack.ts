@@ -33,7 +33,7 @@ app.event("app_home_opened", async ({ event, client }) => {
         view: {
           type: "home",
           callback_id: "home_view",
-          blocks: await getAuthenticationHomeViewBlocks(event.user),
+          blocks: getAuthenticationHomeViewBlocks(event.user),
         },
       });
     } else {
@@ -42,7 +42,7 @@ app.event("app_home_opened", async ({ event, client }) => {
         view: {
           type: "home",
           callback_id: "home_view",
-          blocks: await getHomeViewBlocks(user),
+          blocks: getHomeViewBlocks(user),
         },
       });
     }
@@ -73,7 +73,7 @@ app.action<BlockAction>("turn_on_reminders", async ({ ack, body, client }) => {
       view: {
         type: "home",
         callback_id: "home_view",
-        blocks: await getHomeViewBlocks(user),
+        blocks: getHomeViewBlocks(user),
       },
     });
   } catch (error) {
@@ -105,7 +105,7 @@ app.action<BlockButtonAction>(
         view: {
           type: "home",
           callback_id: "home_view",
-          blocks: await getHomeViewBlocks(user),
+          blocks: getHomeViewBlocks(user),
         },
       });
     } catch (error) {
@@ -117,5 +117,5 @@ app.action<BlockButtonAction>(
 (async () => {
   await app.start();
 
-  console.log("⚡️ Bolt app is running!");
+  console.log("⚡ Bolt app is running!");
 })();

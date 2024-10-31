@@ -1,8 +1,10 @@
 import { serve } from "@hono/node-server";
+import { WebClient } from "@slack/web-api";
 import dotenv from "dotenv";
 import { Hono } from "hono";
-import { updateUserToken } from "./db";
+import { getUser, updateUserToken } from "./db";
 import { getInitialAccessToken } from "./harvest";
+import { getHomeViewBlocks } from "./ui";
 
 dotenv.config();
 
@@ -26,7 +28,22 @@ app.get("/harvest/oauth/callback", async (context) => {
     await getInitialAccessToken(code);
   await updateUserToken(slack_id, access_token, refresh_token, expires_in);
 
-  const slackHomeUrl = "https://infiniteranges.slack.com/archives/D07UGHB5256";
+  const user = await getUser(slack_id);
+
+  // refresh slack app home view
+  if (user != null) {
+    const slackClient = new WebClient(process.env.SLACK_BOT_TOKEN);
+    await slackClient.views.publish({
+      user_id: slack_id,
+      view: {
+        type: "home",
+        callback_id: "home_view",
+        blocks: getHomeViewBlocks(user),
+      },
+    });
+  }
+
+  const slackHomeUrl = "slack://TAU9U8B98";
 
   return context.html(`
         <!DOCTYPE html>
@@ -57,7 +74,7 @@ app.get("/harvest/oauth/callback", async (context) => {
                 <script type="text/javascript">
                     setTimeout(() => {
                         window.location.href = "${slackHomeUrl}"; // redirect to Slack after 10 seconds
-                    }, 5000);
+                    }, 3000);
                 </script>
             </head>
             
