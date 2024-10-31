@@ -1,33 +1,34 @@
-import { Hono } from 'hono'
-import { serve } from '@hono/node-server'
+import { serve } from "@hono/node-server";
+import dotenv from "dotenv";
+import { Hono } from "hono";
 import { updateUserToken } from "./db";
 import { getInitialAccessToken } from "./harvest";
-import dotenv from "dotenv";
 
 dotenv.config();
 
-const app = new Hono()
+const app = new Hono();
 
-app.get('/harvest/oauth/callback', async (context) => {
-    const code = context.req.query('code')
-    const slack_id = context.req.query('state')
+app.get("/harvest/oauth/callback", async (context) => {
+  const code = context.req.query("code");
+  const slack_id = context.req.query("state");
 
-    if (code == null) {
-        console.log("Code is missing from Harvest callback")
-        return context.text('Authorization code missing in the callback', 400)
-    }
+  if (code == null) {
+    console.log("Code is missing from Harvest callback");
+    return context.text("Authorization code missing in the callback", 400);
+  }
 
-    if (slack_id == null) {
-        console.log("Slack ID is missing from Harvest callback")
-        return context.text('Slack ID is missing in the callback', 400)
-    }
+  if (slack_id == null) {
+    console.log("Slack ID is missing from Harvest callback");
+    return context.text("Slack ID is missing in the callback", 400);
+  }
 
-    const { access_token, refresh_token, expires_in } = await getInitialAccessToken(code)
-    await updateUserToken(slack_id, access_token, refresh_token, expires_in)
+  const { access_token, refresh_token, expires_in } =
+    await getInitialAccessToken(code);
+  await updateUserToken(slack_id, access_token, refresh_token, expires_in);
 
-    const slackHomeUrl = "https://infiniteranges.slack.com/archives/D07UGHB5256";
+  const slackHomeUrl = "https://infiniteranges.slack.com/archives/D07UGHB5256";
 
-    return context.html(`
+  return context.html(`
         <!DOCTYPE html>
         <html lang="en">
             <head>
@@ -67,9 +68,9 @@ app.get('/harvest/oauth/callback', async (context) => {
             </body>
         </html>
     `);
-})
+});
 
 serve({
-    fetch: app.fetch,
-    port: 3001,
-})
+  fetch: app.fetch,
+  port: 3001,
+});

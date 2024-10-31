@@ -6,6 +6,8 @@
     "build": "tsup",
     "test": "vitest run",
     "test:ui": "vitest run --ui",
+    "lint": "biome check",
+    "lint:fix": "biome check --write",
     "start:slack": "node dist/slack.js",
     "start:oauth": "node dist/oauth.js",
     "start:remind": "node dist/remind.js"
@@ -18,6 +20,7 @@
     "hono": "^4.6.8"
   },
   "devDependencies": {
+    "@biomejs/biome": "1.9.4",
     "dotenv": "^16.4.5",
     "prisma": "^5.21.1",
     "tsup": "^8.3.5",
