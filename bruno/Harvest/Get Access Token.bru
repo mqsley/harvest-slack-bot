@@ -1,0 +1,22 @@
+meta {
+  name: Get Access Token
+  type: http
+  seq: 2
+}
+
+post {
+  url: https://id.getharvest.com/api/v2/oauth2/token?code={{AUTHORIZATION_CODE}}&client_id={{HARVEST_CLIENT_ID}}&client_secret={{HARVEST_CLIENT_SECRET}}&grant_type=authorization_code
+  body: json
+  auth: none
+}
+
+query {
+  code: {{AUTHORIZATION_CODE}}
+  client_id: {{HARVEST_CLIENT_ID}}
+  client_secret: {{HARVEST_CLIENT_SECRET}}
+  grant_type: authorization_code
+}
+
+vars:pre-request {
+  AUTHORIZATION_CODE: 
+}

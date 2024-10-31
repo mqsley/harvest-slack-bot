@@ -1,0 +1,15 @@
+meta {
+  name: Get Timesheets
+  type: http
+  seq: 4
+}
+
+get {
+  url: https://api.harvestapp.com/api/v2/time_entries
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{ACCESS_TOKEN}}
+}

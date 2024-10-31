@@ -1,20 +1,23 @@
 {
   "name": "harvest-slack-bot",
-  "version": "1.0.0",
-  "main": "index.js",
+  "version": "0.0.1",
+  "description": "custom harvest timesheet slack integration with reminders",
   "scripts": {
     "build": "tsup",
-    "start": "node dist/bot.js"
+    "start:slack": "node dist/slack.js",
+    "start:oauth": "node dist/oauth.js",
+    "start:remind": "node dist/remind.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
   "dependencies": {
-    "@slack/web-api": "^7.7.0"
+    "@hono/node-server": "^1.13.3",
+    "@prisma/client": "^5.21.1",
+    "@slack/bolt": "^4.0.1",
+    "@slack/web-api": "^7.7.0",
+    "hono": "^4.6.8"
   },
   "devDependencies": {
     "dotenv": "^16.4.5",
+    "prisma": "^5.21.1",
     "tsup": "^8.3.5",
     "typescript": "^5.6.3"
   }

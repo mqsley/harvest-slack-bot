@@ -1,23 +1,35 @@
-import { WebClient } from "@slack/web-api"
+import { WebClient } from "@slack/web-api";
+import { getUsersWithRemindersEnabled } from "./db";
+import { getCurrentTimeEntries } from "./harvest";
+import { User, TimeEntry } from "./types";
 import dotenv from "dotenv";
 
-console.log("Creating Web Client")
+dotenv.config();
+const slackClient = new WebClient(process.env.SLACK_BOT_TOKEN);
 
-dotenv.config({ path: '.env.local' });
-
-const token = process.env.SLACK_TOKEN;
-const web = new WebClient(token);
+function getReminderMessage(user: User, timeEntries: TimeEntry[]) {
+    return `Hey <@${user.slack_id}>, you've only sub submit your time sheet`
+}
 
 (async () => {
-    console.log("Sending Slack Message")
-    // Post a message to the channel, and await the result.
-    // Find more arguments and details of the response: https://api.slack.com/methods/chat.postMessage
-    const conversationId = "U07SL6QUM51"
-    const result = await web.chat.postMessage({
-      text: 'Get your Timesheet in now!',
-      channel: conversationId,
-    });
-  
-    // The result contains an identifier for the message, `ts`.
-    console.log(`Successfully send message ${result.ts} to user conversation ${conversationId}`);
-  })();
+    console.log('🗓️ Remind is Running!');
+
+    const users = await getUsersWithRemindersEnabled()
+
+    for (const user of users) {
+        const timeEntries = await getCurrentTimeEntries(user);
+
+        if (timeEntries.length < 5) {
+            console.log(`✉️ Sending message to ${user.slack_id}`);
+
+            await slackClient.chat.postMessage({
+                channel: user.slack_id,
+                text: getReminderMessage(user, timeEntries),
+            });
+
+            console.log(`📫 Sent message to ${user.slack_id}`);
+        }
+    }
+
+    console.log('✅ Remind complete!');
+})();

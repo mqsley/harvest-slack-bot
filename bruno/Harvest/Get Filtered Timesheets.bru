@@ -1,0 +1,20 @@
+meta {
+  name: Get Filtered Timesheets
+  type: http
+  seq: 5
+}
+
+get {
+  url: https://api.harvestapp.com/api/v2/time_entries?from=2024-10-21&to=2024-10-25
+  body: none
+  auth: bearer
+}
+
+query {
+  from: 2024-10-21
+  to: 2024-10-25
+}
+
+auth:bearer {
+  token: {{ACCESS_TOKEN}}
+}
