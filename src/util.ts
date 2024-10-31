@@ -1,16 +1,17 @@
-export function getMondayAndFriday(): { monday: Date; friday: Date } {
-    const today = new Date();
+export function getMondayAndFriday(date: Date = new Date()): { monday: Date; friday: Date } {
+    const currentDay = date.getDay();
 
-    const dayOfWeek = today.getDay();
-    const daysToMonday = (1 - dayOfWeek + 7) % 7; // Days to next Monday
-    const daysToFriday = (5 - dayOfWeek + 7) % 7; // Days to next Friday
+    const daysToMonday = (currentDay === 0 ? -6 : 1 - currentDay); // Sunday (0) wraps around to Monday (-6)
+    const daysToFriday = daysToMonday + 4;
 
-    // Calculate Monday and Friday dates
-    const monday = new Date(today);
-    monday.setDate(today.getDate() + daysToMonday);
+    const monday = new Date(date);
+    monday.setDate(date.getDate() + daysToMonday);
 
-    const friday = new Date(today);
-    friday.setDate(today.getDate() + daysToFriday);
+    const friday = new Date(date);
+    friday.setDate(date.getDate() + daysToFriday);
+
+    monday.setHours(0, 0, 0, 0);
+    friday.setHours(0, 0, 0, 0);
 
     return { monday, friday };
 }

@@ -4,6 +4,8 @@
   "description": "custom harvest timesheet slack integration with reminders",
   "scripts": {
     "build": "tsup",
+    "test": "vitest run",
+    "test:ui": "vitest run --ui",
     "start:slack": "node dist/slack.js",
     "start:oauth": "node dist/oauth.js",
     "start:remind": "node dist/remind.js"
@@ -19,6 +21,7 @@
     "dotenv": "^16.4.5",
     "prisma": "^5.21.1",
     "tsup": "^8.3.5",
-    "typescript": "^5.6.3"
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.4"
   }
 }
