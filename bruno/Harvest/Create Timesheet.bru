@@ -1,0 +1,25 @@
+meta {
+  name: Create Timesheet
+  type: http
+  seq: 8
+}
+
+post {
+  url: https://api.harvestapp.com/api/v2/time_entries
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{ACCESS_TOKEN}}
+}
+
+body:json {
+  {
+        "project_id": "42492801",
+        "task_id": "23418987",
+        "user_id": "5084481",
+        "spent_date": "2024-10-31",
+        "hours": 8
+  }
+}

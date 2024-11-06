@@ -1,6 +1,6 @@
-import type { Block, KnownBlock } from "@slack/types";
+import type { ActionsBlockElement, Block, KnownBlock } from "@slack/types";
+import { getCurrentTimesheet, getPreviousTimesheet } from "./harvest";
 import type { User } from "./types";
-import { getMondayAndFriday } from "./util";
 
 export function getAuthenticationHomeViewBlocks(
   slack_id: string,
@@ -79,12 +79,20 @@ export function getHomeViewBlocks(user: User): (KnownBlock | Block)[] {
   ];
 }
 
-export function getReminderMessageBlock(message: string, isComplete: boolean) {
+export async function getReminderMessage(user: User) {
   function formatDate(date: Date): string {
     return date.toLocaleDateString("en-US", { month: "long", day: "numeric" });
   }
 
-  const { monday, friday } = getMondayAndFriday();
+  const currentTimesheet = await getCurrentTimesheet(user);
+  const previousTimesheet = await getPreviousTimesheet(user);
+
+  const lastFridayTimeEntry =
+    previousTimesheet.entries[previousTimesheet.entries.length - 1];
+
+  const message = currentTimesheet.isComplete
+    ? `Hey <@${user.slack_id}>, great work! You completed your timesheet and are all good! :tada:`
+    : `Hey <@${user.slack_id}>, you haven't submitted a timesheet for this week.`;
 
   const blocks: (KnownBlock | Block)[] = [
     {
@@ -95,41 +103,60 @@ export function getReminderMessageBlock(message: string, isComplete: boolean) {
       },
     },
     {
-      type: "section",
-      text: {
-        type: "mrkdwn",
-        text: `*This week*, ${formatDate(monday)} to ${formatDate(friday)}`,
-      },
-    },
-    {
       type: "divider",
     },
     {
       type: "section",
       text: {
         type: "mrkdwn",
-        text: `*<https://infiniteranges.harvestapp.com/time|Timesheet>*\nStatus: ${isComplete ? ":white_check_mark: Submitted" : ":no_entry: Not Submitted"}`,
+        text: `*<${currentTimesheet.url}|Current Timesheet>*\n*${formatDate(currentTimesheet.monday)} to ${formatDate(currentTimesheet.friday)}*\nStatus: ${currentTimesheet.isComplete ? ":white_check_mark: Submitted" : ":no_entry: Not Submitted"}`,
       },
     },
   ];
 
-  if (!isComplete) {
-    blocks.push({
-      type: "actions",
-      elements: [
-        {
-          type: "button",
-          text: {
-            type: "plain_text",
-            text: "Complete now",
-            emoji: true,
-          },
-          style: "primary",
-          url: "https://infiniteranges.harvestapp.com/time",
-        },
-      ],
+  const actionElements: ActionsBlockElement[] = [];
+
+  if (previousTimesheet.isPrefillable) {
+    actionElements.push({
+      type: "button",
+      text: {
+        type: "plain_text",
+        text: "Copy previous week",
+        emoji: true,
+      },
+      style: "primary",
+      action_id: "prefill_timesheet",
     });
   }
 
-  return blocks;
+  actionElements.push({
+    type: "button",
+    text: {
+      type: "plain_text",
+      text: "Edit manually",
+      emoji: true,
+    },
+    url: currentTimesheet.url,
+  });
+
+  if (!currentTimesheet.isComplete) {
+    blocks.push(
+      {
+        type: "actions",
+        elements: actionElements,
+      },
+      {
+        type: "divider",
+      },
+      {
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: `*<${previousTimesheet.url}|Last Week's Timesheet>*\n*${formatDate(previousTimesheet.monday)} to ${formatDate(previousTimesheet.friday)}*\nStatus: ${previousTimesheet.isComplete ? ":white_check_mark: Submitted" : ":no_entry: Not Submitted"}\n*${previousTimesheet.hours} hours* billed to *${lastFridayTimeEntry.project.name}* as _${lastFridayTimeEntry.task.name}_`,
+        },
+      },
+    );
+  }
+
+  return { blocks, message };
 }

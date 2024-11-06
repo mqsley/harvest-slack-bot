@@ -6,6 +6,7 @@ import {
 } from "@slack/bolt";
 import dotenv from "dotenv";
 import { getUser, setUserReminder } from "./db";
+import { getPreviousTimesheet, prefillTimeEntries } from "./harvest";
 import { getAuthenticationHomeViewBlocks, getHomeViewBlocks } from "./ui";
 
 dotenv.config();
@@ -110,6 +111,56 @@ app.action<BlockButtonAction>(
       });
     } catch (error) {
       console.error(error);
+    }
+  },
+);
+
+app.action<BlockButtonAction>(
+  "prefill_timesheet",
+  async ({ ack, body, respond }) => {
+    await ack();
+
+    const user = await getUser(body.user.id);
+
+    if (user == null) {
+      throw new Error("Could not retrieve existing user");
+    }
+    const previousTimesheet = await getPreviousTimesheet(user);
+
+    try {
+      if (!previousTimesheet.isPrefillable) {
+        throw new Error("Previous timesheet is not prefillable");
+      }
+
+      const submitUrl = await prefillTimeEntries(user);
+
+      await respond({
+        text: "Go to Harvest to submit",
+        blocks: [
+          {
+            type: "section",
+            text: {
+              type: "mrkdwn",
+              text: `Your hours have been prefilled, please *<${submitUrl}|proceed to Harvest>* to submit`,
+            },
+          },
+        ],
+        replace_original: true,
+      });
+    } catch (error) {
+      await respond({
+        text: "Go to Harvest to submit",
+        blocks: [
+          {
+            type: "section",
+            text: {
+              type: "mrkdwn",
+              text: "Unfortunately an issue arose and we cannot prefill your hours, please *<https://infiniteranges.harvestapp.com/time|proceed to Harvest>* to fix and submit",
+            },
+          },
+        ],
+        replace_original: true,
+      });
     }
   },
 );

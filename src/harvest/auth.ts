@@ -1,6 +1,5 @@
-import { updateUserToken } from "./db";
-import type { HarvestAccessToken, TimeEntry, User } from "./types";
-import { getMondayAndFriday } from "./util";
+import { updateUserToken } from "../db";
+import type { HarvestAccessToken, User } from "../types";
 
 export async function getInitialAccessToken(
   harvest_auth_token: string,
@@ -10,8 +9,9 @@ export async function getInitialAccessToken(
     client_id: process.env.HARVEST_CLIENT_ID,
     client_secret: process.env.HARVEST_CLIENT_SECRET,
     grant_type: "authorization_code",
-    redirect_uri:
-      "https://ca78-73-119-109-179.ngrok-free.app/harvest/oauth/callback",
+    // FIXME: can these be removed now?
+    // redirect_uri:
+    //   "https://ca78-73-119-109-179.ngrok-free.app/harvest/oauth/callback",
   });
 
   const response = await fetch(
@@ -79,33 +79,4 @@ export async function getAccessToken(user: User): Promise<string> {
   );
 
   return data.access_token;
-}
-
-export async function getCurrentTimeEntries(user: User): Promise<TimeEntry[]> {
-  const accessToken = await getAccessToken(user);
-
-  const { monday, friday } = getMondayAndFriday();
-
-  function formatDate(date: Date): string {
-    return date.toISOString().split("T")[0];
-  }
-
-  const response = await fetch(
-    `https://api.harvestapp.com/v2/time_entries?from=${formatDate(monday)}&to=${formatDate(friday)}`,
-    {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Harvest-Account-ID": process.env.HARVEST_ACCOUNT_ID,
-        "User-Agent": "Superfun Harvest Helper",
-      },
-    },
-  );
-
-  const data = await response.json();
-
-  if (!response.ok || !Array.isArray(data.time_entries)) {
-    throw new Error(`Failed to retrieve time entries (${response.status})`);
-  }
-
-  return data.time_entries;
 }
