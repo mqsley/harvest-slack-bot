@@ -13,6 +13,7 @@
     "start:remind": "node dist/remind.js"
   },
   "dependencies": {
+    "@firebasegen/default-connector": "file:dataconnect-generated/js/default-connector",
     "@hono/node-server": "^1.13.3",
     "@prisma/client": "^5.21.1",
     "@slack/bolt": "^4.0.1",
